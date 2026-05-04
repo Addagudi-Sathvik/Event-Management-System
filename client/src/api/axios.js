@@ -5,6 +5,7 @@ const apiBaseUrl = apiRootUrl?.endsWith("/api") ? apiRootUrl : `${apiRootUrl}/ap
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
