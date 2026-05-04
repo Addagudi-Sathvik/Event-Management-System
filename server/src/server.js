@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000;
   const server = http.createServer(app);
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL,
+      origin: "https://event-management-system-ivory-ten.vercel.app",
       credentials: true,
     },
   });
@@ -45,3 +45,5 @@ const PORT = process.env.PORT || 5000;
 
   startServer(PORT);
 })();
+
+
