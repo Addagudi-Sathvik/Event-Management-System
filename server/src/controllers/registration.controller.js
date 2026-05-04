@@ -17,8 +17,18 @@ exports.registerForEvent = async (req, res, next) => {
     const userId = attendeeId;
     const { eventId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Invalid event id." });
+    }
+
     const existing = await Registration.findOne({ attendeeId: userId, eventId }).session(session);
     if (existing) {
+      if (!existing.qrCodeData && existing.token) {
+        existing.qrCodeData = await QRCode.toDataURL(existing.token);
+        existing.ticketToken = existing.token;
+        await existing.save({ session });
+      }
       await session.abortTransaction();
       return res.status(200).json({
         message: "Already registered",
@@ -27,9 +37,27 @@ exports.registerForEvent = async (req, res, next) => {
       });
     }
 
+    const eventForRegistration = await Event.findById(eventId).session(session);
+    if (!eventForRegistration) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Event not found." });
+    }
+
+    if (eventForRegistration.status !== "approved") {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Registration failed: Event is not approved yet." });
+    }
+
+    if (new Date(eventForRegistration.date) < new Date()) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Registration failed: Event date has passed." });
+    }
+
     const event = await Event.findOneAndUpdate(
       {
         _id: eventId,
+        status: "approved",
+        date: { $gte: new Date() },
         $expr: { $lt: ["$currentRegisteredCount", "$maxSeatCapacity"] },
       },
       { $inc: { currentRegisteredCount: 1 } },
@@ -132,3 +160,4 @@ exports.cancelRegistration = async (req, res, next) => {
     session.endSession();
   }
 };
+

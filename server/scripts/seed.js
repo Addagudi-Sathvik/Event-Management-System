@@ -71,19 +71,25 @@ async function seed() {
     maxSeatCapacity: 2,
     currentRegisteredCount: 2,
     bannerImageURL: "https://source.unsplash.com/1600x900/?event,conference,stage",
+    status: "approved",
   });
+
+  const attendeeAToken = `EVT-SEED-${Date.now()}-A`;
+  const attendeeBToken = `EVT-SEED-${Date.now()}-B`;
 
   await Registration.create([
     {
       eventId: event._id,
       attendeeId: attendeeA._id,
-      confirmationNumber: `EVT-SEED-${Date.now()}-A`,
+      token: attendeeAToken,
+      ticketToken: attendeeAToken,
       registrationDate: new Date(),
     },
     {
       eventId: event._id,
       attendeeId: attendeeB._id,
-      confirmationNumber: `EVT-SEED-${Date.now()}-B`,
+      token: attendeeBToken,
+      ticketToken: attendeeBToken,
       registrationDate: new Date(),
     },
   ]);
@@ -105,3 +111,5 @@ seed()
     await mongoose.connection.close();
     console.log("MongoDB connection closed.");
   });
+
+

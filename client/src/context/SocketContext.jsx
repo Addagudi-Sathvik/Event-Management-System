@@ -7,15 +7,22 @@ const SocketContext = createContext(null);
 export function SocketProvider({ children }) {
   const { user } = useAuth();
 
-  const socket = useMemo(
-    () =>
-      io(import.meta.env.VITE_SOCKET_URL || "http://localhost:5000", {
-        autoConnect: false,
-      }),
-    []
-  );
+  const socket = useMemo(() => {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL;
+
+    if (!socketUrl) {
+      console.error("Missing VITE_SOCKET_URL. Realtime seat updates will be disabled until it is configured.");
+      return null;
+    }
+
+    return io(socketUrl.replace(/\/+$/, ""), {
+      autoConnect: false,
+    });
+  }, []);
 
   useEffect(() => {
+    if (!socket) return;
+
     if (user) socket.connect();
     else socket.disconnect();
 

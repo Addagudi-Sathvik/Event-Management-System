@@ -11,13 +11,13 @@ import { useSocket } from "../context/SocketContext";
 const sentiment = new Sentiment();
 
 const getLiveEmoji = (text) => {
-  if (!text.trim()) return "😐";
+  if (!text.trim()) return ":|";
   const { score } = sentiment.analyze(text);
-  if (score > 2) return "😍";
-  if (score > 0) return "🙂";
-  if (score < -2) return "😞";
-  if (score < 0) return "🙁";
-  return "😐";
+  if (score > 2) return ":D";
+  if (score > 0) return ":)";
+  if (score < -2) return ":(";
+  if (score < 0) return ":/";
+  return ":|";
 };
 
 export default function EventDetailsPage() {
@@ -169,9 +169,8 @@ export default function EventDetailsPage() {
   if (loading) return <div className="p-8 text-slate-200">Loading...</div>;
   if (error) return <div className="p-8 text-red-400">{error}</div>;
   if (!event) return <div className="p-8 text-red-400">Event not found (ID: {id}).</div>;
-
-  const isFull = event.currentRegisteredCount >= event.maxSeatCapacity; 
-
+  const isFull = (event.currentRegisteredCount || 0) >= (event.maxSeatCapacity || 0);
+  const ticketCode = registration?.token || registration?.confirmationNumber;
   return (
     <div className="min-h-screen bg-slate-950 px-6 py-10 text-white">
       <motion.div
@@ -199,39 +198,42 @@ export default function EventDetailsPage() {
               {event.maxSeatCapacity}
             </p>
 
-            {isFull ? (
+            {registered ? (
+              <div className="space-y-4 text-center">
+                <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-emerald-400 mb-2">Registered!</h3>
+                  <div className="break-all text-2xl font-mono bg-black/50 px-4 py-2 rounded-lg mb-2">
+                    {ticketCode || "Token unavailable"}
+                  </div>
+                  <p className="text-sm text-emerald-300">
+                    Status: {(registration?.status || "active").toUpperCase()}
+                  </p>
+                  {registration?.qrCodeData && (
+                    <img src={registration.qrCodeData} alt="QR Ticket" className="mx-auto mt-4 h-32 w-32 rounded-lg" />
+                  )}
+                </div>
+                <button
+                  onClick={handleCancel}
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-orange-500 px-4 py-2 font-semibold hover:bg-orange-400 disabled:opacity-60"
+                >
+                  {submitting ? "Cancelling..." : "Cancel Registration"}
+                </button>
+              </div>
+            ) : isFull ? (
               <button
                 disabled
                 className="w-full cursor-not-allowed rounded-xl bg-red-500/80 px-4 py-2 font-semibold"
               >
                 Event Full
               </button>
-            ) : !user || user.role !== 'attendee' ? (
+            ) : !user || user.role !== "attendee" ? (
               <button
                 disabled
                 className="w-full cursor-not-allowed rounded-xl bg-slate-500/80 px-4 py-2 font-semibold"
               >
                 Login as Attendee to Register
               </button>
-            ) : registered ? (
-              <div className="space-y-4 text-center">
-                <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-emerald-400 mb-2">✅ Registered!</h3>
-                  <div className="text-2xl font-mono bg-black/50 px-4 py-2 rounded-lg mb-2">
-                    {registration.token || registration.confirmationNumber}
-                  </div>
-                  <p className="text-sm text-emerald-300">Status: {registration.status.toUpperCase()}</p>
-                  {registration.qrCodeData && (
-                    <img src={registration.qrCodeData} alt="QR Ticket" className="mx-auto mt-4 w-32 h-32 rounded-lg" />
-                  )}
-                </div>
-                <button
-                  onClick={handleCancel}
-                  className="w-full rounded-xl bg-orange-500 px-4 py-2 font-semibold hover:bg-orange-400"
-                >
-                  Cancel Registration
-                </button>
-              </div>
             ) : (
               <>
                 <div className="mb-4 flex gap-2">
@@ -349,3 +351,5 @@ export default function EventDetailsPage() {
     </div>
   );
 }
+
+

@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
+const Registration = require("../models/Registration");
 
 // Get pending events for admin approval
 exports.getPendingEvents = async (req, res, next) => {
@@ -140,6 +141,8 @@ exports.deleteEvent = async (req, res, next) => {
       return res.status(404).json({ message: "Event not found." });
     }
 
+    await Registration.deleteMany({ eventId: event._id });
+
     return res.status(200).json({ message: "Event deleted successfully." });
   } catch (error) {
     next(error);
@@ -193,4 +196,5 @@ exports.unblockUser = async (req, res, next) => {
     next(error);
   }
 };
+
 
